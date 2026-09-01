@@ -8,6 +8,7 @@
     {% endunless %}
     <p class="footer-meta">
       &copy; {{ site.time | date: '%Y' }} {{ site.title }}. ·
+      <a href="{{ '/feed.xml' | relative_url }}">RSS</a> ·
       <a href="{{ '/unsubscribe/' | relative_url }}">Unsubscribe</a>
     </p>
   </div>

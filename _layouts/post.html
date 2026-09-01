@@ -14,5 +14,16 @@ layout: default
     <a class="post-share-link" href="mailto:?subject={{ page.title | url_encode }}&body={{ page.url | absolute_url | url_encode }}">Email</a>
     <button type="button" class="post-share-link post-share-copy" data-url="{{ page.url | absolute_url }}">Copy link</button>
   </div>
+  {% if page.previous or page.next %}
+  <nav class="post-nav">
+    {% if page.previous %}
+    <a class="post-nav-link post-nav-prev" href="{{ page.previous.url | relative_url }}">← {{ page.previous.title }}</a>
+    {% endif %}
+    {% if page.next %}
+    <a class="post-nav-link post-nav-next" href="{{ page.next.url | relative_url }}">{{ page.next.title }} →</a>
+    {% endif %}
+  </nav>
+  {% endif %}
 </article>
 {% include comments.html %}
+<p class="back-to-top"><a href="#top">↑ Back to top</a></p>
