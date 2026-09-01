@@ -1,7 +1,7 @@
 title: Grievances About Sports
 description: >-
   Complaints, gripes, and hot takes about the world of sports, delivered to your inbox.
-url: "" # fill in once GitHub Pages is live, e.g. https://<username>.github.io
+url: "https://maffiemd.github.io"
 baseurl: "/grievances-about-sports" # repo name; leave "" if using a custom domain or a <username>.github.io repo
 
 # Supabase project settings used by assets/js/supabase-client.js.
