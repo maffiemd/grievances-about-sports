@@ -7,8 +7,8 @@ baseurl: "/grievances-about-sports" # repo name; leave "" if using a custom doma
 # Supabase project settings used by assets/js/supabase-client.js.
 # The anon key is safe to publish - it can only INSERT into subscribers
 # and call the narrow unsubscribe() RPC (see supabase/schema.sql).
-supabase_url: "https://YOUR-PROJECT.supabase.co"
-supabase_anon_key: "YOUR-ANON-KEY"
+supabase_url: "https://fhnhrxfanpibggzmfbwq.supabase.co"
+supabase_anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobmhyeGZhbnBpYmdnem1mYndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMjE1NTYsImV4cCI6MjEwMzc5NzU1Nn0.EbkzfePE1FlaiKzN3naqbEUywA7uVgnVcrAvQ5n4QGc"
 
 markdown: kramdown
 permalink: /:year/:month/:day/:title/
