@@ -97,6 +97,16 @@ Test it end-to-end by subscribing (or unsubscribing) on the live site, then chec
 
 This renders as a responsive, captioned image on the site, and the same image (with a proper absolute URL) in the email.
 
+### Comments
+
+Readers can leave a name + comment on any post. Comments go through Supabase directly (same anon key as subscribe/unsubscribe) and are **hidden until approved** — a new comment inserts with `approved = false`, and the public `select` policy in [`supabase/schema.sql`](supabase/schema.sql) only returns rows where `approved = true`. There's no moderation UI; approve (or delete) comments in the Supabase dashboard's **Table Editor → comments**, or via SQL:
+
+```sql
+update comments set approved = true where id = '...';
+```
+
+The form also has a hidden honeypot field (`website`) - if it's filled in, the submission is silently dropped client-side, which catches unsophisticated bots without adding a CAPTCHA.
+
 ### Editing an existing post
 
 Editing a post file that's already been published — fixing a typo, tweaking wording — does **not** trigger a resend. The Action only fires for *newly added* files under `_posts/`; a push that only modifies an existing post file produces no output from the "which post(s) to send" step, so the send steps are skipped entirely. Just commit and push edits as normal.

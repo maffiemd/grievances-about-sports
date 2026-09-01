@@ -1,0 +1,24 @@
+<section class="comments" aria-labelledby="comments-heading">
+  <h2 id="comments-heading">Comments</h2>
+
+  <ul class="comment-list" id="comment-list"></ul>
+  <p class="comment-empty" id="comment-empty" hidden>No comments yet — be the first.</p>
+
+  <form id="comment-form" class="comment-form">
+    <div class="comment-field">
+      <label for="comment-name">Name</label>
+      <input type="text" id="comment-name" name="name" required maxlength="80">
+    </div>
+    <div class="comment-field">
+      <label for="comment-body">Comment</label>
+      <textarea id="comment-body" name="body" required rows="4" maxlength="2000"></textarea>
+    </div>
+    <!-- Honeypot: hidden from real users via CSS below; bots that fill every field trip it. -->
+    <div class="comment-field comment-honeypot" aria-hidden="true">
+      <label for="comment-website">Website</label>
+      <input type="text" id="comment-website" name="website" tabindex="-1" autocomplete="off">
+    </div>
+    <button type="submit">Post comment</button>
+    <p class="comment-status" id="comment-status" role="status"></p>
+  </form>
+</section>
