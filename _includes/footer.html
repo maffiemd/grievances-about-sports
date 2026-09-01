@@ -16,7 +16,7 @@
     window.SUPABASE_URL = {{ site.supabase_url | jsonify }};
     window.SUPABASE_ANON_KEY = {{ site.supabase_anon_key | jsonify }};
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="{{ '/assets/js/vendor/supabase.min.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/supabase-client.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/subscribe.js' | relative_url }}"></script>
   {% if page.url == '/unsubscribe/' %}

@@ -6,7 +6,7 @@ _site/
 
 # Ruby / Bundler
 .bundle/
-vendor/
+/vendor/
 
 # Node
 node_modules/
