@@ -47,7 +47,9 @@ In the repo's **Settings → Pages**, set the source to the `main` branch (root)
 
 ### 5. Owner notifications (optional)
 
-Get an email at your own inbox whenever someone subscribes or unsubscribes. Subscribe/unsubscribe happen directly between the browser and Supabase (no server code in the loop), so this is a Supabase [Database Webhook](https://supabase.com/docs/guides/database/webhooks) on the `subscribers` table that calls a small Edge Function ([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), which sends the notification via Resend.
+Get an email at your own inbox whenever someone subscribes, unsubscribes, or leaves a comment - and send a new subscriber a welcome email. These all happen directly between the browser and Supabase (no server code in the loop), so this is a Supabase [Database Webhook](https://supabase.com/docs/guides/database/webhooks) that calls a small Edge Function ([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), which sends the emails via Resend.
+
+The welcome email's text lives in its own file, [`supabase/functions/notify-owner/welcome-email.ts`](supabase/functions/notify-owner/welcome-email.ts) - edit `WELCOME_EMAIL_SUBJECT`/`WELCOME_EMAIL_BODY` there (paragraphs separated by a blank line), then redeploy with the command in step 1 below.
 
 1. Deploy the function (requires the [Supabase CLI](https://supabase.com/docs/guides/cli), logged in and linked to your project):
    ```bash
@@ -71,6 +73,8 @@ Get an email at your own inbox whenever someone subscribes or unsubscribes. Subs
 That's it — nothing in the site or the GitHub Action needs to change; these listen directly on their tables. The `x-webhook-secret` header is checked on every request so the function can't be triggered by anyone who finds its URL.
 
 Test it end-to-end by subscribing/unsubscribing and leaving a comment on the live site, then checking **Edge Functions → notify-owner → Invocations** in the dashboard for `200` responses, and confirming the emails arrived.
+
+**Resend's shared testing address (`onboarding@resend.dev`) can only send to a handful of allowed test addresses** - real subscriber addresses (the welcome email's actual audience) will get rejected until you verify your own sending domain in Resend. Owner notifications still work fine in the meantime, since they always go to your own verified `OWNER_EMAIL`.
 
 ## Writing and publishing a post
 
