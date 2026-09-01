@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Welcome to Grievances About Sports"
+title: "Welcome to Sports Grievances"
 ---
-This is the first post on **Grievances About Sports** — a newsletter for complaints, gripes, and hot takes about the world of sports.
+This is the first post on **Sports Grievances** — a newsletter for complaints, gripes, and hot takes about the world of sports.
 
 {% include image.html src="example.png" alt="Placeholder image" caption="This is how images look — drop a file in assets/images/ and reference it with this include." %}
 

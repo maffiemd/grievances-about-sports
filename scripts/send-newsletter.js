@@ -11,7 +11,7 @@
 //   SUPABASE_URL
 //   SUPABASE_SERVICE_ROLE_KEY   server-side key with SELECT access - never expose this in the site's JS
 //   RESEND_API_KEY
-//   FROM_EMAIL                  e.g. "Grievances About Sports <newsletter@yourdomain.com>"
+//   FROM_EMAIL                  e.g. "Sports Grievances <newsletter@yourdomain.com>"
 //   SITE_URL                    e.g. "https://yourusername.github.io/grievances-about-sports"
 // Optional:
 //   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
@@ -74,7 +74,7 @@ function renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink 
       </p>
       <hr style="margin:32px 0;border:none;border-top:1px solid #e5e0da;">
       <p style="color:#6b6b6b;font-family:-apple-system,sans-serif;font-size:0.8rem;">
-        You're receiving this because you subscribed to Grievances About Sports.
+        You're receiving this because you subscribed to Sports Grievances.
         <a href="${unsubscribeLink}" style="color:#6b6b6b;">Unsubscribe</a>
       </p>
     </div>

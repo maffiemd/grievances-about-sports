@@ -1,4 +1,4 @@
-# Grievances About Sports
+# Sports Grievances
 
 A Substack-style newsletter: write a post as a Markdown file, push it to GitHub, and it's emailed to every subscriber automatically. The site itself is a static [Jekyll](https://jekyllrb.com/) site hosted on GitHub Pages.
 
@@ -38,7 +38,7 @@ A Substack-style newsletter: write a post as a Markdown file, push it to GitHub,
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `RESEND_API_KEY`
 - *Variables* tab, add:
-  - `FROM_EMAIL` — e.g. `Grievances About Sports <newsletter@yourdomain.com>`
+  - `FROM_EMAIL` — e.g. `Sports Grievances <newsletter@yourdomain.com>`
   - `SITE_URL` — e.g. `https://yourusername.github.io/grievances-about-sports` (no trailing slash)
 
 ### 4. Enable GitHub Pages
