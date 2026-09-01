@@ -1,0 +1,153 @@
+// Sends an email for each newly-published post to all subscribed readers.
+//
+// Required env vars:
+//   POST_FILES                  comma-separated paths to _posts/*.md files to send (relative to repo root)
+//   SUPABASE_URL
+//   SUPABASE_SERVICE_ROLE_KEY   server-side key with SELECT access - never expose this in the site's JS
+//   RESEND_API_KEY
+//   FROM_EMAIL                  e.g. "Grievances About Sports <newsletter@yourdomain.com>"
+//   SITE_URL                    e.g. "https://yourusername.github.io/grievances-about-sports"
+// Optional:
+//   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
+
+const fs = require("fs");
+const path = require("path");
+const matter = require("gray-matter");
+const { marked } = require("marked");
+const { createClient } = require("@supabase/supabase-js");
+const { Resend } = require("resend");
+
+const RESEND_BATCH_LIMIT = 100;
+
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+// Mirrors _config.yml's `permalink: /:year/:month/:day/:title/` against a
+// standard Jekyll _posts/YYYY-MM-DD-title.md filename.
+function postUrl(siteUrl, postFilePath) {
+  const basename = path.basename(postFilePath, path.extname(postFilePath));
+  const match = basename.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)$/);
+  if (!match) {
+    throw new Error(`Post filename doesn't match YYYY-MM-DD-title.md: ${postFilePath}`);
+  }
+  const [, year, month, day, slug] = match;
+  return `${siteUrl}/${year}/${month}/${day}/${slug}/`;
+}
+
+function renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink }) {
+  return `<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#fdfcfb;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
+    <div style="max-width:640px;margin:0 auto;padding:32px 20px;">
+      <h1 style="font-size:1.6rem;margin-bottom:0;">${title}</h1>
+      <p style="color:#6b6b6b;font-family:-apple-system,sans-serif;font-size:0.9rem;margin-top:4px;">${dateText}</p>
+      <div style="font-size:1.05rem;line-height:1.6;">${bodyHtml}</div>
+      <p style="margin-top:32px;">
+        <a href="${postLink}" style="color:#c1440e;">Read it on the site</a>
+      </p>
+      <hr style="margin:32px 0;border:none;border-top:1px solid #e5e0da;">
+      <p style="color:#6b6b6b;font-family:-apple-system,sans-serif;font-size:0.8rem;">
+        You're receiving this because you subscribed to Grievances About Sports.
+        <a href="${unsubscribeLink}" style="color:#6b6b6b;">Unsubscribe</a>
+      </p>
+    </div>
+  </body>
+</html>`;
+}
+
+function chunk(items, size) {
+  const chunks = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function getRecipients(supabase) {
+  const testEmail = process.env.TEST_EMAIL;
+  if (testEmail) {
+    console.log(`TEST_EMAIL set - sending only to ${testEmail}`);
+    return [{ email: testEmail, unsubscribe_token: "test" }];
+  }
+
+  const { data, error } = await supabase
+    .from("subscribers")
+    .select("email, unsubscribe_token")
+    .eq("subscribed", true);
+
+  if (error) {
+    throw new Error(`Failed to fetch subscribers from Supabase: ${error.message}`);
+  }
+  return data;
+}
+
+async function sendPost(postFilePath, { supabase, resend, siteUrl, fromEmail }) {
+  const raw = fs.readFileSync(postFilePath, "utf8");
+  const { data: frontMatter, content } = matter(raw);
+
+  const title = frontMatter.title || path.basename(postFilePath);
+  const dateText = frontMatter.date
+    ? new Date(frontMatter.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : "";
+  const bodyHtml = marked.parse(content);
+  const postLink = postUrl(siteUrl, postFilePath);
+
+  const recipients = await getRecipients(supabase);
+  if (recipients.length === 0) {
+    console.log(`No subscribers to send "${title}" to.`);
+    return;
+  }
+
+  const emails = recipients.map((recipient) => ({
+    from: fromEmail,
+    to: recipient.email,
+    subject: title,
+    html: renderEmailHtml({
+      title,
+      dateText,
+      bodyHtml,
+      postLink,
+      unsubscribeLink: `${siteUrl}/unsubscribe/?token=${recipient.unsubscribe_token}`,
+    }),
+  }));
+
+  for (const batch of chunk(emails, RESEND_BATCH_LIMIT)) {
+    const { error } = await resend.batch.send(batch);
+    if (error) {
+      throw new Error(`Resend batch send failed: ${JSON.stringify(error)}`);
+    }
+  }
+
+  console.log(`Sent "${title}" to ${recipients.length} subscriber(s).`);
+}
+
+async function main() {
+  const postFiles = requireEnv("POST_FILES")
+    .split(",")
+    .map((file) => file.trim())
+    .filter(Boolean);
+
+  if (postFiles.length === 0) {
+    console.log("No new post files to send.");
+    return;
+  }
+
+  const supabase = createClient(requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"));
+  const resend = new Resend(requireEnv("RESEND_API_KEY"));
+  const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
+  const fromEmail = requireEnv("FROM_EMAIL");
+
+  for (const postFile of postFiles) {
+    await sendPost(postFile, { supabase, resend, siteUrl, fromEmail });
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

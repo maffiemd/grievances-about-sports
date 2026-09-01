@@ -1,0 +1,13 @@
+{
+  "name": "send-newsletter",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GitHub Action script: emails new Grievances About Sports posts to Supabase subscribers via Resend.",
+  "main": "send-newsletter.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "resend": "^4.0.0",
+    "gray-matter": "^4.0.3",
+    "marked": "^14.1.2"
+  }
+}

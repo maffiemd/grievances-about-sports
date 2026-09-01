@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jekyll",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "export PATH=\"/opt/homebrew/opt/ruby/bin:$PATH\"; export CPATH=\"$(xcrun --show-sdk-path)/usr/include/c++/v1\"; bundle exec jekyll serve --host 0.0.0.0"
+      ],
+      "port": 4000
+    }
+  ]
+}

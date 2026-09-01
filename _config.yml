@@ -1,0 +1,25 @@
+title: Grievances About Sports
+description: >-
+  Complaints, gripes, and hot takes about the world of sports, delivered to your inbox.
+url: "" # fill in once GitHub Pages is live, e.g. https://<username>.github.io
+baseurl: "/grievances-about-sports" # repo name; leave "" if using a custom domain or a <username>.github.io repo
+
+# Supabase project settings used by assets/js/supabase-client.js.
+# The anon key is safe to publish - it can only INSERT into subscribers
+# and call the narrow unsubscribe() RPC (see supabase/schema.sql).
+supabase_url: "https://YOUR-PROJECT.supabase.co"
+supabase_anon_key: "YOUR-ANON-KEY"
+
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+
+plugins:
+  - jekyll-feed
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - scripts
+  - supabase
+  - README.md
+  - node_modules

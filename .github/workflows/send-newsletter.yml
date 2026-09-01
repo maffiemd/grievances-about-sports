@@ -1,0 +1,54 @@
+name: Send Newsletter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "_posts/**"
+  workflow_dispatch:
+    inputs:
+      post_file:
+        description: "Path to a post under _posts to send (e.g. _posts/2026-08-31-welcome-to-grievances-about-sports.md)"
+        required: true
+      test_email:
+        description: "If set, sends only to this address instead of every subscriber"
+        required: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Determine which post(s) to send
+        id: posts
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "files=${{ inputs.post_file }}" >> "$GITHUB_OUTPUT"
+          else
+            FILES=$(git diff --name-status "${{ github.event.before }}" "${{ github.sha }}" -- _posts/ | awk '$1 == "A" {print $2}' | paste -sd, -)
+            echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install script dependencies
+        if: steps.posts.outputs.files != ''
+        working-directory: scripts
+        run: npm install
+
+      - name: Send newsletter
+        if: steps.posts.outputs.files != ''
+        run: node scripts/send-newsletter.js
+        env:
+          POST_FILES: ${{ steps.posts.outputs.files }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          TEST_EMAIL: ${{ inputs.test_email }}
