@@ -5,6 +5,7 @@
   --muted: #6b6b6b;
   --accent: #c1440e;
   --border: #e5e0da;
+  --quote-bg: #f3efe8;
   --max-width: 680px;
 }
 
@@ -15,6 +16,7 @@
     --muted: #a3998c;
     --accent: #ff8552;
     --border: #2c2822;
+    --quote-bg: #201c17;
   }
 }
 
@@ -83,6 +85,15 @@ body {
 .post-title { margin-bottom: 0.25rem; }
 .post-content { font-size: 1.125rem; }
 .post-content img { max-width: 100%; }
+.post-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--quote-bg);
+  border-radius: 8px;
+}
+.post-content blockquote p { margin: 0.5rem 0; }
+.post-content blockquote p:first-child { margin-top: 0; }
+.post-content blockquote p:last-child { margin-bottom: 0; }
 
 .post-image {
   margin: 1.5rem 0;
