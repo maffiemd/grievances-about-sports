@@ -9,4 +9,9 @@ layout: default
   <div class="post-content">
     {{ content }}
   </div>
+  <div class="post-share">
+    <span class="post-share-label">Share this:</span>
+    <a class="post-share-link" href="mailto:?subject={{ page.title | url_encode }}&body={{ page.url | absolute_url | url_encode }}">Email</a>
+    <button type="button" class="post-share-link post-share-copy" data-url="{{ page.url | absolute_url }}">Copy link</button>
+  </div>
 </article>

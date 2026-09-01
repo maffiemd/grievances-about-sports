@@ -100,6 +100,29 @@ body {
   font-size: 0.85rem;
 }
 
+.post-share {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.post-share-label { color: var(--muted); }
+.post-share-link {
+  color: var(--accent);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.post-share-link:hover { text-decoration: underline; }
+
 .site-footer {
   border-top: 1px solid var(--border);
   margin-top: 2rem;
