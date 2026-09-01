@@ -45,6 +45,31 @@ A Substack-style newsletter: write a post as a Markdown file, push it to GitHub,
 
 In the repo's **Settings → Pages**, set the source to the `main` branch (root). GitHub builds the Jekyll site automatically — no workflow needed for that part.
 
+### 5. Owner notifications (optional)
+
+Get an email at your own inbox whenever someone subscribes or unsubscribes. Subscribe/unsubscribe happen directly between the browser and Supabase (no server code in the loop), so this is a Supabase [Database Webhook](https://supabase.com/docs/guides/database/webhooks) on the `subscribers` table that calls a small Edge Function ([`supabase/functions/notify-owner`](supabase/functions/notify-owner)), which sends the notification via Resend.
+
+1. Deploy the function (requires the [Supabase CLI](https://supabase.com/docs/guides/cli), logged in and linked to your project):
+   ```bash
+   supabase functions deploy notify-owner --no-verify-jwt
+   ```
+2. Set its secrets:
+   ```bash
+   supabase secrets set \
+     RESEND_API_KEY=your_resend_api_key \
+     NOTIFY_FROM_EMAIL="onboarding@resend.dev" \
+     OWNER_EMAIL=you@example.com \
+     WEBHOOK_SECRET=$(openssl rand -hex 32)
+   ```
+   (`NOTIFY_FROM_EMAIL` can stay on Resend's shared testing address until you verify your own domain — same as `FROM_EMAIL` in step 2.)
+3. In the Supabase dashboard, go to **Database → Webhooks → Create a new webhook**:
+   - Table: `subscribers`
+   - Events: `Insert`, `Update`
+   - Type: `HTTP Request` → `POST` to your function's URL (shown after deploy, looks like `https://<project-ref>.supabase.co/functions/v1/notify-owner`)
+   - Add an HTTP header: `x-webhook-secret` → the same value you set for `WEBHOOK_SECRET` above
+
+That's it — nothing in the site or the GitHub Action needs to change; this listens directly on the `subscribers` table. The `x-webhook-secret` header is checked on every request so the function can't be triggered by anyone who finds its URL.
+
 ## Writing and publishing a post
 
 1. Add a new file to `_posts/`, named `YYYY-MM-DD-your-title.md`:
