@@ -12,6 +12,9 @@ vendor/
 node_modules/
 npm-debug.log*
 
+# Supabase CLI
+supabase/.temp/
+
 # Env / secrets
 .env
 .env.local

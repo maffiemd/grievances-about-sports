@@ -62,13 +62,16 @@ Get an email at your own inbox whenever someone subscribes or unsubscribes. Subs
      WEBHOOK_SECRET=$(openssl rand -hex 32)
    ```
    (`NOTIFY_FROM_EMAIL` can stay on Resend's shared testing address until you verify your own domain — same as `FROM_EMAIL` in step 2.)
-3. In the Supabase dashboard, go to **Database → Webhooks → Create a new webhook**:
+3. In the Supabase dashboard, go to **Database → Webhooks**. If this is the first Database Webhook on the project, the page shows an **Install integration** button before you can create one — click it (this enables the `pg_net` extension and bootstraps the `supabase_functions` schema the webhook trigger needs). Skipping this step produces `ERROR: 3F000: schema "supabase_functions" does not exist` when you try to save a webhook.
+4. Click **Create a new hook**:
    - Table: `subscribers`
    - Events: `Insert`, `Update`
    - Type: `HTTP Request` → `POST` to your function's URL (shown after deploy, looks like `https://<project-ref>.supabase.co/functions/v1/notify-owner`)
    - Add an HTTP header: `x-webhook-secret` → the same value you set for `WEBHOOK_SECRET` above
 
 That's it — nothing in the site or the GitHub Action needs to change; this listens directly on the `subscribers` table. The `x-webhook-secret` header is checked on every request so the function can't be triggered by anyone who finds its URL.
+
+Test it end-to-end by subscribing (or unsubscribing) on the live site, then checking **Edge Functions → notify-owner → Invocations** in the dashboard for a `200` response, and confirming the email arrived.
 
 ## Writing and publishing a post
 
