@@ -1,8 +1,10 @@
 // Supabase Database Webhook target: emails the site owner whenever someone
-// subscribes or unsubscribes. Subscribe/unsubscribe happen directly between
-// the browser and this Supabase project (see assets/js/subscribe.js and
-// unsubscribe.js) with no server code in the loop, so a Database Webhook on
-// the `subscribers` table is the only reliable place to catch both events.
+// subscribes, unsubscribes, or leaves a comment. All three happen directly
+// between the browser and this Supabase project (see assets/js/subscribe.js,
+// unsubscribe.js, and comments.js) with no server code in the loop, so a
+// Database Webhook on the relevant table is the only reliable place to catch
+// each event. Two webhooks point at this same function: one on `subscribers`
+// (Insert, Update) and one on `comments` (Insert).
 //
 // One-time setup: see "Owner notifications" in the README.
 
@@ -11,17 +13,28 @@ Deno.serve(async (req) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { type, record, old_record } = await req.json();
+  const { table, type, record, old_record } = await req.json();
+  // Fall back to the row shape if `table` isn't present, for robustness.
+  const isComment = table === "comments" || (!table && "author_name" in (record ?? {}));
 
   let subject: string | null = null;
-  if (type === "INSERT") {
+  let text = "";
+
+  if (isComment && type === "INSERT") {
+    const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
+    const postUrl = siteUrl ? siteUrl + record.post_path : record.post_path;
+    subject = `New comment from ${record.author_name}`;
+    text = `${record.author_name} commented on ${postUrl}:\n\n"${record.body}"\n\nApprove it in the Supabase dashboard (Table Editor -> comments).`;
+  } else if (!isComment && type === "INSERT") {
     subject = `New subscriber: ${record.email}`;
-  } else if (type === "UPDATE" && old_record?.subscribed === true && record?.subscribed === false) {
+    text = subject;
+  } else if (!isComment && type === "UPDATE" && old_record?.subscribed === true && record?.subscribed === false) {
     subject = `Unsubscribed: ${record.email}`;
+    text = subject;
   }
 
   if (!subject) {
-    // Some other change to the row (e.g. a future column) - not our concern.
+    // Some other change to a row (e.g. a future column) - not our concern.
     return new Response("ignored", { status: 200 });
   }
 
@@ -35,7 +48,7 @@ Deno.serve(async (req) => {
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to: Deno.env.get("OWNER_EMAIL"),
       subject,
-      text: `${subject}\n\n${new Date().toUTCString()}`,
+      text: `${text}\n\n${new Date().toUTCString()}`,
     }),
   });
 
