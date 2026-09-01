@@ -32,6 +32,15 @@ jobs:
             echo "files=$FILES" >> "$GITHUB_OUTPUT"
           fi
 
+      - uses: ruby/setup-ruby@v1
+        if: steps.posts.outputs.files != ''
+        with:
+          bundler-cache: true
+
+      - name: Build site
+        if: steps.posts.outputs.files != ''
+        run: bundle exec jekyll build
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

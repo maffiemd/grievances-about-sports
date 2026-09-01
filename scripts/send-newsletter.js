@@ -1,5 +1,11 @@
 // Sends an email for each newly-published post to all subscribed readers.
 //
+// Reuses Jekyll's own rendered HTML (from _site/, built by the workflow
+// before this script runs) rather than re-parsing Markdown independently,
+// so anything Jekyll-specific in a post - Liquid includes, the {% include
+// image.html %} shortcode, kramdown extensions - renders identically in
+// the email and on the site.
+//
 // Required env vars:
 //   POST_FILES                  comma-separated paths to _posts/*.md files to send (relative to repo root)
 //   SUPABASE_URL
@@ -13,7 +19,7 @@
 const fs = require("fs");
 const path = require("path");
 const matter = require("gray-matter");
-const { marked } = require("marked");
+const cheerio = require("cheerio");
 const { createClient } = require("@supabase/supabase-js");
 const { Resend } = require("resend");
 
@@ -29,14 +35,30 @@ function requireEnv(name) {
 
 // Mirrors _config.yml's `permalink: /:year/:month/:day/:title/` against a
 // standard Jekyll _posts/YYYY-MM-DD-title.md filename.
-function postUrl(siteUrl, postFilePath) {
+function postUrlPath(postFilePath) {
   const basename = path.basename(postFilePath, path.extname(postFilePath));
   const match = basename.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)$/);
   if (!match) {
     throw new Error(`Post filename doesn't match YYYY-MM-DD-title.md: ${postFilePath}`);
   }
   const [, year, month, day, slug] = match;
-  return `${siteUrl}/${year}/${month}/${day}/${slug}/`;
+  return `/${year}/${month}/${day}/${slug}/`;
+}
+
+// Rewrites root-relative src/href attributes (as Jekyll's relative_url filter
+// produces, e.g. "/grievances-about-sports/assets/images/x.jpg") into fully
+// qualified URLs, since email clients can't resolve relative links.
+function absolutizeUrls(html, origin) {
+  const $ = cheerio.load(html, null, false);
+  $("[src]").each((_, el) => {
+    const src = $(el).attr("src");
+    if (src && src.startsWith("/")) $(el).attr("src", origin + src);
+  });
+  $("[href]").each((_, el) => {
+    const href = $(el).attr("href");
+    if (href && href.startsWith("/")) $(el).attr("href", origin + href);
+  });
+  return $.html();
 }
 
 function renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink }) {
@@ -86,16 +108,25 @@ async function getRecipients(supabase) {
   return data;
 }
 
-async function sendPost(postFilePath, { supabase, resend, siteUrl, fromEmail }) {
-  const raw = fs.readFileSync(postFilePath, "utf8");
-  const { data: frontMatter, content } = matter(raw);
-
+async function sendPost(postFilePath, { supabase, resend, siteUrl, origin, fromEmail }) {
+  const { data: frontMatter } = matter(fs.readFileSync(postFilePath, "utf8"));
   const title = frontMatter.title || path.basename(postFilePath);
   const dateText = frontMatter.date
     ? new Date(frontMatter.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : "";
-  const bodyHtml = marked.parse(content);
-  const postLink = postUrl(siteUrl, postFilePath);
+
+  const urlPath = postUrlPath(postFilePath);
+  const builtHtmlPath = path.join("_site", urlPath, "index.html");
+  if (!fs.existsSync(builtHtmlPath)) {
+    throw new Error(`Built page not found at ${builtHtmlPath} - did "jekyll build" run before this script?`);
+  }
+  const $ = cheerio.load(fs.readFileSync(builtHtmlPath, "utf8"));
+  const rawBodyHtml = $(".post-content").html();
+  if (!rawBodyHtml) {
+    throw new Error(`Couldn't find .post-content in ${builtHtmlPath}`);
+  }
+  const bodyHtml = absolutizeUrls(rawBodyHtml, origin);
+  const postLink = siteUrl + urlPath;
 
   const recipients = await getRecipients(supabase);
   if (recipients.length === 0) {
@@ -140,10 +171,11 @@ async function main() {
   const supabase = createClient(requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"));
   const resend = new Resend(requireEnv("RESEND_API_KEY"));
   const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
+  const origin = new URL(siteUrl).origin;
   const fromEmail = requireEnv("FROM_EMAIL");
 
   for (const postFile of postFiles) {
-    await sendPost(postFile, { supabase, resend, siteUrl, fromEmail });
+    await sendPost(postFile, { supabase, resend, siteUrl, origin, fromEmail });
   }
 }
 

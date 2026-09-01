@@ -6,7 +6,7 @@ A Substack-style newsletter: write a post as a Markdown file, push it to GitHub,
 
 - **Site**: Jekyll, built automatically by GitHub Pages on every push to `main`.
 - **Subscribers**: stored in a [Supabase](https://supabase.com) Postgres table, *not* in this repo. The signup form on the site talks to Supabase directly using a public "anon" key that can only insert new subscribers and call one narrow "unsubscribe" function — it can never read the subscriber list.
-- **Sending email**: a GitHub Action (`.github/workflows/send-newsletter.yml`) runs on every push that adds a file under `_posts/`. It reads the subscriber list from Supabase (using a private key only the Action has) and sends the new post via [Resend](https://resend.com).
+- **Sending email**: a GitHub Action (`.github/workflows/send-newsletter.yml`) runs on every push that adds a file under `_posts/`. It builds the site with Jekyll, reads that new post's actual rendered HTML (so anything Jekyll-specific — images, Liquid — matches the site exactly), reads the subscriber list from Supabase (using a private key only the Action has), and sends it via [Resend](https://resend.com).
 
 ## One-time setup
 
@@ -58,7 +58,20 @@ In the repo's **Settings → Pages**, set the source to the `main` branch (root)
 2. Commit and push to `main`.
 3. GitHub Pages rebuilds the site, and the "Send Newsletter" Action automatically emails every subscriber the new post.
 
-Editing an *existing* post file doesn't trigger a resend — only newly added files under `_posts/` do.
+### Adding images to a post
+
+1. Drop the image file into `assets/images/`.
+2. Reference it in the post with:
+   ```liquid
+   {% include image.html src="your-file.jpg" alt="Description for screen readers" caption="Optional caption text" %}
+   ```
+   (`caption` is optional — leave it off for a plain image.)
+
+This renders as a responsive, captioned image on the site, and the same image (with a proper absolute URL) in the email.
+
+### Editing an existing post
+
+Editing a post file that's already been published — fixing a typo, tweaking wording — does **not** trigger a resend. The Action only fires for *newly added* files under `_posts/`; a push that only modifies an existing post file produces no output from the "which post(s) to send" step, so the send steps are skipped entirely. Just commit and push edits as normal.
 
 ## Local development (VS Code)
 

@@ -84,6 +84,22 @@ body {
 .post-content { font-size: 1.125rem; }
 .post-content img { max-width: 100%; }
 
+.post-image {
+  margin: 1.5rem 0;
+}
+.post-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+.post-image figcaption {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+}
+
 .site-footer {
   border-top: 1px solid var(--border);
   margin-top: 2rem;
