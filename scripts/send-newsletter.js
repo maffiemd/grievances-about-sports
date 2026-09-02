@@ -25,6 +25,15 @@ const { Resend } = require("resend");
 
 const RESEND_BATCH_LIMIT = 100;
 
+// Mirrors assets/css/style.css's light-theme palette (--bg, --fg, --muted,
+// --border, --accent) - email clients need inline styles, so this can't
+// reference the stylesheet directly.
+const COLOR_BG = "#fdfcfb";
+const COLOR_FG = "#1a1a1a";
+const COLOR_MUTED = "#6b6b6b";
+const COLOR_BORDER = "#e5e0da";
+const COLOR_ACCENT = "#c1440e";
+
 function requireEnv(name) {
   const value = process.env[name];
   if (!value) {
@@ -64,18 +73,18 @@ function absolutizeUrls(html, origin) {
 function renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink }) {
   return `<!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#fdfcfb;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
+  <body style="margin:0;padding:0;background:${COLOR_BG};font-family:Georgia,'Times New Roman',serif;color:${COLOR_FG};">
     <div style="max-width:640px;margin:0 auto;padding:32px 20px;">
       <h1 style="font-size:1.6rem;margin-bottom:0;">${title}</h1>
-      <p style="color:#6b6b6b;font-family:-apple-system,sans-serif;font-size:0.9rem;margin-top:4px;">${dateText}</p>
+      <p style="color:${COLOR_MUTED};font-family:-apple-system,sans-serif;font-size:0.9rem;margin-top:4px;">${dateText}</p>
       <div style="font-size:1.05rem;line-height:1.6;">${bodyHtml}</div>
       <p style="margin-top:32px;">
-        <a href="${postLink}" style="color:#c1440e;">Read it on the site</a>
+        <a href="${postLink}" style="color:${COLOR_ACCENT};">Read it on the site</a>
       </p>
-      <hr style="margin:32px 0;border:none;border-top:1px solid #e5e0da;">
-      <p style="color:#6b6b6b;font-family:-apple-system,sans-serif;font-size:0.8rem;">
+      <hr style="margin:32px 0;border:none;border-top:1px solid ${COLOR_BORDER};">
+      <p style="color:${COLOR_MUTED};font-family:-apple-system,sans-serif;font-size:0.8rem;">
         You're receiving this because you subscribed to Sports Grievances.
-        <a href="${unsubscribeLink}" style="color:#6b6b6b;">Unsubscribe</a>
+        <a href="${unsubscribeLink}" style="color:${COLOR_MUTED};">Unsubscribe</a>
       </p>
     </div>
   </body>
@@ -108,7 +117,7 @@ async function getRecipients(supabase) {
   return data;
 }
 
-async function sendPost(postFilePath, { supabase, resend, siteUrl, origin, fromEmail }) {
+async function sendPost(postFilePath, recipients, { resend, siteUrl, origin, fromEmail }) {
   const { data: frontMatter } = matter(fs.readFileSync(postFilePath, "utf8"));
   const title = frontMatter.title || path.basename(postFilePath);
   const dateText = frontMatter.date
@@ -127,12 +136,6 @@ async function sendPost(postFilePath, { supabase, resend, siteUrl, origin, fromE
   }
   const bodyHtml = absolutizeUrls(rawBodyHtml, origin);
   const postLink = siteUrl + urlPath;
-
-  const recipients = await getRecipients(supabase);
-  if (recipients.length === 0) {
-    console.log(`No subscribers to send "${title}" to.`);
-    return;
-  }
 
   const emails = recipients.map((recipient) => ({
     from: fromEmail,
@@ -174,8 +177,14 @@ async function main() {
   const origin = new URL(siteUrl).origin;
   const fromEmail = requireEnv("FROM_EMAIL");
 
+  const recipients = await getRecipients(supabase);
+  if (recipients.length === 0) {
+    console.log("No subscribers to send to.");
+    return;
+  }
+
   for (const postFile of postFiles) {
-    await sendPost(postFile, { supabase, resend, siteUrl, origin, fromEmail });
+    await sendPost(postFile, recipients, { resend, siteUrl, origin, fromEmail });
   }
 }
 
