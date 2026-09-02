@@ -43,6 +43,7 @@ jobs:
         run: bundle exec jekyll build
 
       - uses: actions/setup-node@v4
+        if: steps.posts.outputs.files != ''
         with:
           node-version: "22"
 
