@@ -6,11 +6,11 @@
 
   var status = document.getElementById("comment-status");
   var postPath = window.location.pathname;
+  var escapeDiv = document.createElement("div");
 
   function escapeHtml(text) {
-    var div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    escapeDiv.textContent = text;
+    return escapeDiv.innerHTML;
   }
 
   function renderComment(comment) {
@@ -41,6 +41,8 @@
 
     if (error) {
       console.error("Failed to load comments:", error);
+      empty.textContent = "Couldn't load comments — try refreshing.";
+      empty.hidden = false;
       return;
     }
 
