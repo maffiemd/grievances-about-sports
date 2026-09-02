@@ -11,6 +11,11 @@ create table if not exists subscribers (
   created_at timestamptz not null default now()
 );
 
+-- The newsletter send only ever queries `where subscribed = true` (see
+-- scripts/send-newsletter.js), so a partial index keeps that lookup fast
+-- without paying to index the (much less common) unsubscribed rows.
+create index if not exists subscribers_subscribed_idx on subscribers (subscribed) where subscribed = true;
+
 alter table subscribers enable row level security;
 
 -- The public (anon) key may insert new subscribers...
@@ -43,7 +48,10 @@ create table if not exists comments (
   created_at timestamptz not null default now()
 );
 
-create index if not exists comments_post_path_idx on comments (post_path);
+-- Matches the read path exactly (assets/js/comments.js filters by post_path,
+-- relies on the approved = true RLS policy below, and sorts by created_at),
+-- so one compound index covers the filter and the sort together.
+create index if not exists comments_post_path_approved_created_idx on comments (post_path, approved, created_at);
 
 alter table comments enable row level security;
 
