@@ -2,7 +2,7 @@
 layout: post
 title: "What if Joey Porter Jr. Refuses to Play Week 1?"
 ---
-With news that Steelers's cornerback Joey Porter Jr. is needs to check with the ["guys upstairs"](https://bsky.app/profile/bgnation1.bsky.social/post/3muia7qa2pk2j) to see if he is playing week one, it raises the question: What does the collective bargaining agreement say about player refusal to participate during the season?
+With news that Steelers's cornerback Joey Porter Jr. needs to check with the ["guys upstairs"](https://bsky.app/profile/bgnation1.bsky.social/post/3muia7qa2pk2j) to see if he is playing week one, it raises the question: What does the collective bargaining agreement say about player refusal to participate during the season?
 
  After Steelers's running back Le'Veon Bell refused to sign his franchise tag tender in 2018, the NFL negotiated a new collective bargaining agreement. In the new agreement, there are much stiffer penalties for players who hold out in both training camp and the regular season. Specifically, [Article 8(1)(b)](https://overthecap.com/collective-bargaining-agreement/article/8/section/1) states (bolding mine): 
 
