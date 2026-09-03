@@ -71,6 +71,33 @@ function absolutizeUrls(html, origin) {
   return $.html();
 }
 
+// Spam filters weight HTML-only bulk email as more suspicious than mail
+// that also carries a plain-text part, so every send includes both.
+function htmlToPlainText(html) {
+  const $ = cheerio.load(html, null, false);
+  const blocks = [];
+  $("h1, h2, h3, h4, h5, h6, p, li, blockquote, pre").each((_, el) => {
+    const text = $(el).text().replace(/\s+/g, " ").trim();
+    if (text) blocks.push(text);
+  });
+  if (blocks.length > 0) return blocks.join("\n\n");
+  return $.root().text().replace(/\s+/g, " ").trim();
+}
+
+function renderEmailText({ title, dateText, bodyText, postLink, unsubscribeLink }) {
+  return `${title}
+${dateText}
+
+${bodyText}
+
+Read it on the site: ${postLink}
+
+---
+You're receiving this because you subscribed to Sports Grievances.
+Unsubscribe: ${unsubscribeLink}
+`;
+}
+
 function renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink }) {
   return `<!doctype html>
 <html>
@@ -136,21 +163,24 @@ async function sendPost(postFilePath, recipients, { resend, siteUrl, origin, fro
     throw new Error(`Couldn't find .post-content in ${builtHtmlPath}`);
   }
   const bodyHtml = absolutizeUrls(rawBodyHtml, origin);
+  const bodyText = htmlToPlainText(rawBodyHtml);
   const postLink = siteUrl + urlPath;
 
-  const emails = recipients.map((recipient) => ({
-    from: fromEmail,
-    to: recipient.email,
-    ...(replyTo && { reply_to: replyTo }),
-    subject: title,
-    html: renderEmailHtml({
-      title,
-      dateText,
-      bodyHtml,
-      postLink,
-      unsubscribeLink: `${siteUrl}/unsubscribe/?token=${recipient.unsubscribe_token}`,
-    }),
-  }));
+  const emails = recipients.map((recipient) => {
+    const unsubscribeLink = `${siteUrl}/unsubscribe/?token=${recipient.unsubscribe_token}`;
+    return {
+      from: fromEmail,
+      to: recipient.email,
+      ...(replyTo && { reply_to: replyTo }),
+      subject: title,
+      html: renderEmailHtml({ title, dateText, bodyHtml, postLink, unsubscribeLink }),
+      text: renderEmailText({ title, dateText, bodyText, postLink, unsubscribeLink }),
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeLink}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    };
+  });
 
   for (const batch of chunk(emails, RESEND_BATCH_LIMIT)) {
     const { error } = await resend.batch.send(batch);
