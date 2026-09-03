@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(cat)",
+      "Read(//Users/Maffie/**)",
+      "Bash(zsh -i -c 'which ruby; ruby -v; which bundle; rbenv version')",
+      "Bash(xxd assets/images/example.png)"
+    ]
+  }
+}
