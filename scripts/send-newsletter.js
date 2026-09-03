@@ -15,6 +15,7 @@
 //   SITE_URL                    e.g. "https://yourusername.github.io/grievances-about-sports"
 // Optional:
 //   TEST_EMAIL                  if set, sends only to this address instead of querying Supabase
+//   REPLY_TO                    address replies should go to (the sending domain can't receive mail)
 
 const fs = require("fs");
 const path = require("path");
@@ -117,7 +118,7 @@ async function getRecipients(supabase) {
   return data;
 }
 
-async function sendPost(postFilePath, recipients, { resend, siteUrl, origin, fromEmail }) {
+async function sendPost(postFilePath, recipients, { resend, siteUrl, origin, fromEmail, replyTo }) {
   const { data: frontMatter } = matter(fs.readFileSync(postFilePath, "utf8"));
   const title = frontMatter.title || path.basename(postFilePath);
   const dateText = frontMatter.date
@@ -140,6 +141,7 @@ async function sendPost(postFilePath, recipients, { resend, siteUrl, origin, fro
   const emails = recipients.map((recipient) => ({
     from: fromEmail,
     to: recipient.email,
+    ...(replyTo && { reply_to: replyTo }),
     subject: title,
     html: renderEmailHtml({
       title,
@@ -176,6 +178,7 @@ async function main() {
   const siteUrl = requireEnv("SITE_URL").replace(/\/$/, "");
   const origin = new URL(siteUrl).origin;
   const fromEmail = requireEnv("FROM_EMAIL");
+  const replyTo = process.env.REPLY_TO;
 
   const recipients = await getRecipients(supabase);
   if (recipients.length === 0) {
@@ -184,7 +187,7 @@ async function main() {
   }
 
   for (const postFile of postFiles) {
-    await sendPost(postFile, recipients, { resend, siteUrl, origin, fromEmail });
+    await sendPost(postFile, recipients, { resend, siteUrl, origin, fromEmail, replyTo });
   }
 }
 
