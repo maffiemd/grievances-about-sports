@@ -72,6 +72,15 @@ a { color: var(--accent); }
   font-weight: bold;
   color: var(--fg);
   text-decoration: none;
+  line-height: 1.2;
+}
+.site-tagline {
+  flex-basis: 100%;
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 .site-nav a {
   margin-left: 1.25rem;
