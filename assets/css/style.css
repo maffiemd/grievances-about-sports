@@ -102,6 +102,10 @@ a { color: var(--accent); }
 }
 .theme-toggle:hover { color: var(--accent); }
 
+@media (max-width: 600px) {
+  .site-tagline { display: none; }
+}
+
 .site-main {
   max-width: var(--max-width);
   margin: 0 auto;
