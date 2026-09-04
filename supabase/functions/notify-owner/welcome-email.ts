@@ -9,4 +9,4 @@ export const WELCOME_EMAIL_BODY = `Thanks for subscribing. As Frank Costanza put
 
 New posts land here whenever there's something worth writing about, and go out by email as soon as they're published.
 
-If a post prompts a thought, just hit reply. Thanks for reading.`;
+We got a lot of grievances to talk about. And now you're going to hear about them.`;
