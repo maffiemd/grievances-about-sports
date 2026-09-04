@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "preview-welcome-email": "deno run --allow-write supabase/functions/notify-owner/preview-welcome-email.ts"
+  }
+}
