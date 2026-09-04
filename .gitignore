@@ -15,6 +15,7 @@ npm-debug.log*
 
 # Supabase CLI
 supabase/.temp/
+supabase/functions/notify-owner/.preview.html
 
 # Env / secrets
 .env

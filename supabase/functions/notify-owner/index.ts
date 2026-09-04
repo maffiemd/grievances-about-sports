@@ -13,21 +13,19 @@
 //
 // One-time setup: see "Owner notifications" in the README.
 
-import { WELCOME_EMAIL_BODY, WELCOME_EMAIL_SUBJECT } from "./welcome-email.ts";
-
-// Mirrors assets/css/style.css's light-theme palette (--bg, --fg, --muted,
-// --border) - email clients need inline styles, so this can't reference the
-// stylesheet directly.
-const COLOR_BG = "#fdfcfb";
-const COLOR_FG = "#1a1a1a";
-const COLOR_MUTED = "#6b6b6b";
-const COLOR_BORDER = "#e5e0da";
+import { WELCOME_EMAIL_SUBJECT } from "./welcome-email.ts";
+import { renderWelcomeEmailHtml } from "./render-welcome-email.ts";
 
 function siteUrl(): string {
   return (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
 }
 
-async function sendEmail(to: string, subject: string, body: { text?: string; html?: string }) {
+async function sendEmail(
+  to: string,
+  subject: string,
+  body: { text?: string; html?: string },
+  replyTo?: string,
+) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -38,6 +36,7 @@ async function sendEmail(to: string, subject: string, body: { text?: string; htm
       from: Deno.env.get("NOTIFY_FROM_EMAIL"),
       to,
       subject,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       ...body,
     }),
   });
@@ -49,31 +48,11 @@ async function sendEmail(to: string, subject: string, body: { text?: string; htm
   return true;
 }
 
-function renderWelcomeEmailHtml(unsubscribeLink: string) {
-  const paragraphs = WELCOME_EMAIL_BODY.trim()
-    .split(/\n\s*\n/)
-    .map((p) => `<p style="margin:0 0 1em;">${p.trim()}</p>`)
-    .join("");
-
-  return `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background:${COLOR_BG};font-family:Georgia,'Times New Roman',serif;color:${COLOR_FG};">
-    <div style="max-width:640px;margin:0 auto;padding:32px 20px;">
-      <h1 style="font-size:1.4rem;">${WELCOME_EMAIL_SUBJECT}</h1>
-      <div style="font-size:1.05rem;line-height:1.6;">${paragraphs}</div>
-      <hr style="margin:32px 0;border:none;border-top:1px solid ${COLOR_BORDER};">
-      <p style="color:${COLOR_MUTED};font-family:-apple-system,sans-serif;font-size:0.8rem;">
-        <a href="${unsubscribeLink}" style="color:${COLOR_MUTED};">Unsubscribe</a>
-      </p>
-    </div>
-  </body>
-</html>`;
-}
-
 interface Notification {
   to: string;
   subject: string;
   body: { text?: string; html?: string };
+  replyTo?: string;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -98,7 +77,12 @@ function buildNotifications(table: string, type: string, record: Row, oldRecord:
     const unsubscribeLink = `${siteUrl()}/unsubscribe/?token=${record.unsubscribe_token}`;
     return [
       { to: ownerEmail, subject, body: { text: timestamped(subject) } },
-      { to: record.email, subject: WELCOME_EMAIL_SUBJECT, body: { html: renderWelcomeEmailHtml(unsubscribeLink) } },
+      {
+        to: record.email,
+        subject: WELCOME_EMAIL_SUBJECT,
+        body: { html: renderWelcomeEmailHtml(siteUrl(), unsubscribeLink) },
+        replyTo: ownerEmail,
+      },
     ];
   }
 
@@ -123,7 +107,7 @@ Deno.serve(async (req) => {
     return new Response("ignored", { status: 200 });
   }
 
-  const results = await Promise.all(notifications.map((n) => sendEmail(n.to, n.subject, n.body)));
+  const results = await Promise.all(notifications.map((n) => sendEmail(n.to, n.subject, n.body, n.replyTo)));
 
   if (results.some((ok) => !ok)) {
     return new Response("email send failed", { status: 502 });

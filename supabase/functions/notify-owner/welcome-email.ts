@@ -5,8 +5,8 @@
 
 export const WELCOME_EMAIL_SUBJECT = "Welcome to Sports Grievances";
 
-export const WELCOME_EMAIL_BODY = `TODO: write the real welcome text here.
+export const WELCOME_EMAIL_BODY = `Thanks for subscribing. As Frank Costanza put it, the tradition begins with the airing of grievances - and Sports Grievances covers the labor side of sports: collective bargaining, contract negotiations, and arbitration cases across the major leagues.
 
-Explain what the site covers, how often posts go out, and anything else a new subscriber should know - this is placeholder text.
+New posts land here whenever there's something worth writing about, and go out by email as soon as they're published.
 
-Edit this file (supabase/functions/notify-owner/welcome-email.ts), then redeploy.`;
+If a post prompts a thought, hit reply or write a comment on the website. Thanks for reading.`;
